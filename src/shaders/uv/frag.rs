@@ -1,0 +1,12 @@
+// from: https://www.khronos.org/opengl/wiki/Compute_eye_space_from_window_space
+
+pub const FRAGMENT_SHADER: &str = r#"
+#version 450
+layout(location = 0) in vec2 uv;
+layout(location = 0) out vec4 o_Target;
+
+void main()
+{
+    o_Target = vec4(uv, 0.0, 1.0);
+}
+"#;
