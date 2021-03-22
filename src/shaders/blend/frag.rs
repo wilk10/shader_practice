@@ -8,11 +8,11 @@ layout(set = 2, binding = 0) uniform BlendColors_color_a {
 layout(set = 2, binding = 1) uniform BlendColors_color_b {
     vec4 color_b;
 };
-layout(set = 2, binding = 2) uniform BlendColors_color_start {
-    float color_start;
+layout(set = 2, binding = 2) uniform BlendColors_start_lerp {
+    float start_lerp;
 };
-layout(set = 2, binding = 3) uniform BlendColors_color_end {
-    float color_end;
+layout(set = 2, binding = 3) uniform BlendColors_end_lerp {
+    float end_lerp;
 };
 
 float inverseLerp(float from, float to, float value) {
@@ -21,8 +21,10 @@ float inverseLerp(float from, float to, float value) {
 
 void main()
 {
-    float inv_lerped_uvx = inverseLerp(color_start, color_end, uv.x);
-    float gradient = clamp(inv_lerped_uvx, 0.0, 1.0);
+    float inv_lerped_uvx = inverseLerp(start_lerp, end_lerp, uv.x);
+    float min_value = 0.0;
+    float max_value = 1.0;
+    float gradient = clamp(inv_lerped_uvx, min_value, max_value);
     o_Target = mix(color_a, color_b, gradient);
 }
 "#;

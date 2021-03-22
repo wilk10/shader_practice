@@ -10,14 +10,14 @@ use bevy::{
     },
 };
 
-use shader_practice::shaders::blend::frag::FRAGMENT_SHADER;
-use shader_practice::shaders::blend::vert::VERTEX_SHADER;
+use shader_practice::shaders::candy::frag::FRAGMENT_SHADER;
+use shader_practice::shaders::candy::vert::VERTEX_SHADER;
 
 struct Rotator;
 
 #[derive(RenderResources, Default, TypeUuid)]
-#[uuid = "1e08866c-0b8a-437e-8bce-37733b25127e"]
-struct BlendColors {
+#[uuid = "7d342b4f-59a7-47a9-bb1a-f4f8b9fb0bb6"]
+struct Candy {
     pub color_a: Color,
     pub color_b: Color,
     pub start_lerp: f32,
@@ -28,9 +28,9 @@ fn main() {
     App::build()
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
-        .add_asset::<BlendColors>()
+        .add_asset::<Candy>()
         .add_startup_system(setup.system())
-        .add_system(rotate_sphere.system())
+        .add_system(rotate_capsule.system())
         .run();
 }
 
@@ -39,7 +39,7 @@ fn setup(
     mut pipelines: ResMut<Assets<PipelineDescriptor>>,
     mut shaders: ResMut<Assets<Shader>>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<BlendColors>>,
+    mut materials: ResMut<Assets<Candy>>,
     mut render_graph: ResMut<RenderGraph>,
 ) {
     let pipeline_handle = pipelines.add(PipelineDescriptor::default_config(ShaderStages {
@@ -48,38 +48,29 @@ fn setup(
     }));
 
     render_graph.add_system_node(
-        "blend_colors",
-        AssetRenderResourcesNode::<BlendColors>::new(true),
+        "candy",
+        AssetRenderResourcesNode::<Candy>::new(true),
     );
     render_graph
-        .add_node_edge("blend_colors", base::node::MAIN_PASS)
+        .add_node_edge("candy", base::node::MAIN_PASS)
         .unwrap();
-    let material = materials.add(BlendColors {
-        color_a: Color::rgb(0.0, 0.0, 1.0),
+    let material = materials.add(Candy {
+        color_a: Color::rgb(1.0, 1.0, 1.0),
         color_b: Color::rgb(1.0, 0.0, 0.0),
-        start_lerp: 0.25,
-        end_lerp: 0.75,
+        start_lerp: 0.1,
+        end_lerp: 0.9,
     });
     
     commands
         .spawn(MeshBundle {
-            mesh: meshes.add(Mesh::from(shape::Icosphere { radius: 1.0, subdivisions: 10 })),
+            mesh: meshes.add(Mesh::from(shape::Capsule::default())),
             render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
                 pipeline_handle.clone(),
             )]),
-            transform: Transform::from_xyz(-3.0, 0.0, 0.0),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
             ..Default::default()
         })
         .with(Rotator)
-        .with(material.clone())
-        .spawn(MeshBundle {
-            mesh: meshes.add(Mesh::from(shape::Quad { size: Vec2::new(3.0, 3.0), flip: true })),
-            render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
-                pipeline_handle,
-            )]),
-            transform: Transform::from_xyz(3.0, 0.0, 0.0),
-            ..Default::default()
-        })
         .with(material)
         .spawn(PerspectiveCameraBundle {
             transform: Transform::from_xyz(0.0, 0.0, -8.0)
@@ -89,8 +80,12 @@ fn setup(
         
 }
 
-fn rotate_sphere(time: Res<Time>, mut query: Query<&mut Transform, With<Rotator>>) {
+fn rotate_capsule(time: Res<Time>, mut query: Query<&mut Transform, With<Rotator>>) {
     for mut transform in query.iter_mut() {
-        transform.rotation *= Quat::from_rotation_x(3.0 * time.delta_seconds());
+        transform.rotation *= Quat::from_rotation_ypr(
+            2.0 * time.delta_seconds(),
+            0.1 * time.delta_seconds(),
+            0.5 * time.delta_seconds()
+        );
     }
 }

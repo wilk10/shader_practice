@@ -12,6 +12,10 @@ name = "blend"
 path = "src/shaders/blend/main.rs"
 
 [[example]]
+name = "candy"
+path = "src/shaders/candy/main.rs"
+
+[[example]]
 name = "normal"
 path = "src/shaders/normal/main.rs"
 
