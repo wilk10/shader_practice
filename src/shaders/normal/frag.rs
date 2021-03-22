@@ -4,6 +4,6 @@ layout(location = 0) in vec3 normal;
 layout(location = 0) out vec4 o_Target;
 
 void main() {
-    o_Target = vec4(v_normal, 1.0);
+    o_Target = vec4(normal, 1.0);
 }
 "#;

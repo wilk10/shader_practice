@@ -2,7 +2,7 @@ pub const VERTEX_SHADER: &str = r#"
 #version 450
 layout(location = 0) in vec3 Vertex_Position;
 layout(location = 1) in vec3 Vertex_Normal;
-layout(location = 0) out vec3 v_normal;
+layout(location = 0) out vec3 normal;
 
 layout(set = 0, binding = 0) uniform Camera {
     mat4 ViewProj;
