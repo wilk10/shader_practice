@@ -25,13 +25,22 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
     let pipeline_handle = pipelines.add(PipelineDescriptor::default_config(ShaderStages {
-        vertex: shaders.add(Shader::from_glsl(ShaderStage::Vertex, include_str!("normal.vert"))),
-        fragment: Some(shaders.add(Shader::from_glsl(ShaderStage::Fragment, include_str!("normal.frag")))),
+        vertex: shaders.add(Shader::from_glsl(
+            ShaderStage::Vertex,
+            include_str!("normal.vert"),
+        )),
+        fragment: Some(shaders.add(Shader::from_glsl(
+            ShaderStage::Fragment,
+            include_str!("normal.frag"),
+        ))),
     }));
-    
+
     commands
         .spawn(MeshBundle {
-            mesh: meshes.add(Mesh::from(shape::Icosphere { radius: 1.0, subdivisions: 10 })),
+            mesh: meshes.add(Mesh::from(shape::Icosphere {
+                radius: 1.0,
+                subdivisions: 10,
+            })),
             render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
                 pipeline_handle.clone(),
             )]),
@@ -40,11 +49,9 @@ fn setup(
         })
         .with(Rotator)
         .spawn(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(0.0, 0.0, -8.0)
-                .looking_at(Vec3::ZERO, -Vec3::Y),
+            transform: Transform::from_xyz(0.0, 0.0, -8.0).looking_at(Vec3::ZERO, -Vec3::Y),
             ..Default::default()
         });
-        
 }
 
 fn rotate_sphere(time: Res<Time>, mut query: Query<&mut Transform, With<Rotator>>) {

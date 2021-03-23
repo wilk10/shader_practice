@@ -70,14 +70,17 @@ fn setup(
     mut render_graph: ResMut<RenderGraph>,
 ) {
     let pipeline_handle = pipelines.add(PipelineDescriptor::default_config(ShaderStages {
-        vertex: shaders.add(Shader::from_glsl(ShaderStage::Vertex, include_str!("candy.vert"))),
-        fragment: Some(shaders.add(Shader::from_glsl(ShaderStage::Fragment, include_str!("candy.frag")))),
+        vertex: shaders.add(Shader::from_glsl(
+            ShaderStage::Vertex,
+            include_str!("candy.vert"),
+        )),
+        fragment: Some(shaders.add(Shader::from_glsl(
+            ShaderStage::Fragment,
+            include_str!("candy.frag"),
+        ))),
     }));
 
-    render_graph.add_system_node(
-        "candy",
-        AssetRenderResourcesNode::<Candy>::new(true),
-    );
+    render_graph.add_system_node("candy", AssetRenderResourcesNode::<Candy>::new(true));
     render_graph
         .add_node_edge("candy", base::node::MAIN_PASS)
         .unwrap();
@@ -87,7 +90,7 @@ fn setup(
         start_lerp: 0.1,
         end_lerp: 0.9,
     });
-    
+
     commands
         .spawn(MeshBundle {
             mesh: meshes.add(Mesh::from(shape::Capsule::default())),
@@ -100,11 +103,9 @@ fn setup(
         .with(Rotator)
         .with(material)
         .spawn(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(0.0, 0.0, -8.0)
-                .looking_at(Vec3::ZERO, -Vec3::Y),
+            transform: Transform::from_xyz(0.0, 0.0, -8.0).looking_at(Vec3::ZERO, -Vec3::Y),
             ..Default::default()
         });
-        
 }
 
 fn rotate_capsule(time: Res<Time>, mut query: Query<&mut Transform, With<Rotator>>) {
@@ -112,7 +113,7 @@ fn rotate_capsule(time: Res<Time>, mut query: Query<&mut Transform, With<Rotator
         transform.rotation *= Quat::from_rotation_ypr(
             2.0 * time.delta_seconds(),
             0.1 * time.delta_seconds(),
-            0.5 * time.delta_seconds()
+            0.5 * time.delta_seconds(),
         );
     }
 }
