@@ -63,7 +63,7 @@ impl RenderResource for SpawnVfx {
     }
 }
 
-fn main() {
+pub fn main() {
     App::build()
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
@@ -205,6 +205,5 @@ fn rotate_capsule(time: Res<Time>, mut query: Query<&mut Transform, With<Rotator
 fn animate_capsule(time: Res<Time>, mut query: Query<&mut TimeComponent>) {
     for mut time_component in query.iter_mut() {
         time_component.value = time.seconds_since_startup() as f32;
-        println!("time_component.value: {:?}", time_component.value);
     }
 }

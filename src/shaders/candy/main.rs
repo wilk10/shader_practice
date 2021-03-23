@@ -51,7 +51,7 @@ impl RenderResource for Candy {
     }
 }
 
-fn main() {
+pub fn main() {
     App::build()
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
