@@ -1,7 +1,8 @@
-pub const FRAGMENT_SHADER: &str = r#"
 #version 450
+
 layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 o_Target;
+
 layout(set = 2, binding = 0) uniform Candy_color_a {
     vec4 color_a;
 };
@@ -28,4 +29,3 @@ void main()
     float pattern_from0to1 = pattern_minus1to1 * 0.5 + 0.5;
     o_Target = mix(color_a, color_b, pattern_from0to1);
 }
-"#;

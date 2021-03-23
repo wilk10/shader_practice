@@ -10,9 +10,6 @@ use bevy::{
     },
 };
 
-use shader_practice::shaders::spawn::frag::FRAGMENT_SHADER;
-use shader_practice::shaders::spawn::vert::VERTEX_SHADER;
-
 struct Rotator;
 
 #[derive(RenderResources, Default, TypeUuid)]
@@ -50,8 +47,8 @@ fn setup(
     mut render_graph: ResMut<RenderGraph>,
 ) {
     let pipeline_handle = pipelines.add(PipelineDescriptor::default_config(ShaderStages {
-        vertex: shaders.add(Shader::from_glsl(ShaderStage::Vertex, VERTEX_SHADER)),
-        fragment: Some(shaders.add(Shader::from_glsl(ShaderStage::Fragment, FRAGMENT_SHADER))),
+        vertex: shaders.add(Shader::from_glsl(ShaderStage::Vertex, include_str!("spawn.vert"))),
+        fragment: Some(shaders.add(Shader::from_glsl(ShaderStage::Fragment, include_str!("spawn.frag")))),
     }));
 
     render_graph.add_system_node(

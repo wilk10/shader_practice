@@ -7,9 +7,6 @@ use bevy::{
     },
 };
 
-use shader_practice::shaders::uv::frag::FRAGMENT_SHADER;
-use shader_practice::shaders::uv::vert::VERTEX_SHADER;
-
 struct Rotator;
 
 fn main() {
@@ -28,8 +25,8 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
     let pipeline_handle = pipelines.add(PipelineDescriptor::default_config(ShaderStages {
-        vertex: shaders.add(Shader::from_glsl(ShaderStage::Vertex, VERTEX_SHADER)),
-        fragment: Some(shaders.add(Shader::from_glsl(ShaderStage::Fragment, FRAGMENT_SHADER))),
+        vertex: shaders.add(Shader::from_glsl(ShaderStage::Vertex, include_str!("uv.vert"))),
+        fragment: Some(shaders.add(Shader::from_glsl(ShaderStage::Fragment, include_str!("uv.frag")))),
     }));
     
     commands
