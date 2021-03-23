@@ -20,5 +20,9 @@ name = "normal"
 path = "src/shaders/normal/main.rs"
 
 [[example]]
+name = "spawn"
+path = "src/shaders/spawn/main.rs"
+
+[[example]]
 name = "uv"
 path = "src/shaders/uv/main.rs"

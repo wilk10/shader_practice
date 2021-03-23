@@ -15,6 +15,8 @@ layout(set = 2, binding = 3) uniform BlendColors_end_lerp {
     float end_lerp;
 };
 
+precision mediump float;
+
 float inverseLerp(float from, float to, float value) {
     return (value - from) / (to - from);
 }

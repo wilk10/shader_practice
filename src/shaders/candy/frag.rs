@@ -23,9 +23,9 @@ void main()
 {
     float tau = 6.283185307179586;
     float lerped_coords = inverseLerp(start_lerp, end_lerp, (uv.x + uv.y));
-    float n_repetitions = 5.0;
-    float pattern_minus1to1 = cos(lerped_coords * tau * n_repetitions);
-    float from0to1 = pattern_minus1to1 * 0.5 + 0.5;
-    o_Target = mix(color_a, color_b, from0to1);
+    float repetitions = 5.0;
+    float pattern_minus1to1 = cos(lerped_coords * tau * repetitions);
+    float pattern_from0to1 = pattern_minus1to1 * 0.5 + 0.5;
+    o_Target = mix(color_a, color_b, pattern_from0to1);
 }
 "#;
