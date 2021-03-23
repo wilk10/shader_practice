@@ -29,5 +29,6 @@ void main()
     float pattern_from0to1 = pattern_minus1to1 * 0.5 + 0.5;
 
     float fade = pattern_from0to1 * uv.y;
-    o_Target = mix(color_a, color_b, fade);
+    vec4 effect = mix(color_a, color_b, fade);
+    o_Target = effect;
 }
