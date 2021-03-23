@@ -16,6 +16,10 @@ name = "candy"
 path = "src/shaders/candy/main.rs"
 
 [[example]]
+name = "fire"
+path = "src/shaders/fire/main.rs"
+
+[[example]]
 name = "normal"
 path = "src/shaders/normal/main.rs"
 
