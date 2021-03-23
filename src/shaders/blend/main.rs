@@ -1,11 +1,12 @@
 use bevy::{
+    core::Bytes,
     prelude::*,
     reflect::TypeUuid,
     render::{
         mesh::shape,
         pipeline::{PipelineDescriptor, RenderPipeline},
         render_graph::{base, AssetRenderResourcesNode, RenderGraph},
-        renderer::RenderResources,
+        renderer::{RenderResource, RenderResourceType, RenderResources},
         shader::{ShaderStage, ShaderStages},
     },
 };
@@ -13,12 +14,41 @@ use bevy::{
 struct Rotator;
 
 #[derive(RenderResources, Default, TypeUuid)]
+#[render_resources(from_self)]
 #[uuid = "1e08866c-0b8a-437e-8bce-37733b25127e"]
+#[repr(C)]
 struct BlendColors {
     pub color_a: Color,
     pub color_b: Color,
     pub start_lerp: f32,
     pub end_lerp: f32,
+}
+
+impl RenderResource for BlendColors {
+    fn resource_type(&self) -> Option<RenderResourceType> {
+        Some(RenderResourceType::Buffer)
+    }
+
+    fn buffer_byte_len(&self) -> Option<usize> {
+        Some(40)
+    }
+
+    fn write_buffer_bytes(&self, buffer: &mut [u8]) {
+        let (color_a_buf, rest) = buffer.split_at_mut(16);
+        self.color_a.write_bytes(color_a_buf);
+
+        let (color_b_buf, rest) = rest.split_at_mut(16);
+        self.color_b.write_bytes(color_b_buf);
+
+        let (start_lerp_buf, rest) = rest.split_at_mut(4);
+        self.start_lerp.write_bytes(start_lerp_buf);
+
+        self.end_lerp.write_bytes(rest);
+    }
+
+    fn texture(&self) -> Option<&Handle<Texture>> {
+        None
+    }
 }
 
 fn main() {

@@ -1,11 +1,12 @@
 use bevy::{
+    core::Bytes,
     prelude::*,
     reflect::TypeUuid,
     render::{
         mesh::shape,
         pipeline::{PipelineDescriptor, RenderPipeline},
         render_graph::{base, AssetRenderResourcesNode, RenderGraph, RenderResourcesNode},
-        renderer::RenderResources,
+        renderer::{RenderResource, RenderResources, RenderResourceType},
         shader::{ShaderStage, ShaderStages},
     },
 };
@@ -19,12 +20,41 @@ struct TimeComponent{
 }
 
 #[derive(RenderResources, Default, TypeUuid)]
+#[render_resources(from_self)]
 #[uuid = "001a72b7-a79e-4768-bc30-34188f540716"]
+#[repr(C)]
 struct SpawnVfx {
     pub color_a: Color,
     pub color_b: Color,
     pub start_lerp: f32,
     pub end_lerp: f32,
+}
+
+impl RenderResource for SpawnVfx {
+    fn resource_type(&self) -> Option<RenderResourceType> {
+        Some(RenderResourceType::Buffer)
+    }
+
+    fn buffer_byte_len(&self) -> Option<usize> {
+        Some(40)
+    }
+
+    fn write_buffer_bytes(&self, buffer: &mut [u8]) {
+        let (color_a_buf, rest) = buffer.split_at_mut(16);
+        self.color_a.write_bytes(color_a_buf);
+
+        let (color_b_buf, rest) = rest.split_at_mut(16);
+        self.color_b.write_bytes(color_b_buf);
+
+        let (start_lerp_buf, rest) = rest.split_at_mut(4);
+        self.start_lerp.write_bytes(start_lerp_buf);
+
+        self.end_lerp.write_bytes(rest);
+    }
+
+    fn texture(&self) -> Option<&Handle<Texture>> {
+        None
+    }
 }
 
 fn main() {

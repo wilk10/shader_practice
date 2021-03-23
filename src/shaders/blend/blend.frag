@@ -3,16 +3,10 @@
 layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 o_Target;
 
-layout(set = 2, binding = 0) uniform BlendColors_color_a {
+layout(set = 2, binding = 0) uniform BlendColors {
     vec4 color_a;
-};
-layout(set = 2, binding = 1) uniform BlendColors_color_b {
     vec4 color_b;
-};
-layout(set = 2, binding = 2) uniform BlendColors_start_lerp {
     float start_lerp;
-};
-layout(set = 2, binding = 3) uniform BlendColors_end_lerp {
     float end_lerp;
 };
 
