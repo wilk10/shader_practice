@@ -5,11 +5,17 @@ use bevy::{
     render::{
         mesh::shape,
         pipeline::{PipelineDescriptor, RenderPipeline},
-        render_graph::{base, AssetRenderResourcesNode, RenderGraph},
+        render_graph::{base, AssetRenderResourcesNode, RenderGraph, RenderResourcesNode},
         renderer::{RenderResource, RenderResourceType, RenderResources},
         shader::{ShaderStage, ShaderStages},
     },
 };
+
+#[derive(RenderResources, Default, TypeUuid)]
+#[uuid = "af8c8bb6-bab2-48e9-9251-6b757d28afda"]
+struct TimeComponent {
+    value: f32,
+}
 
 #[derive(RenderResources, Default, TypeUuid)]
 #[uuid = "93fb26fc-6c05-489b-9029-601edf703b6b"]
@@ -68,7 +74,8 @@ pub fn main() {
         .add_asset::<FireMaterial>()
         .add_asset::<FireTexture>()
         .add_startup_system(setup.system())
-        .add_system(spawn_fire.system())
+        .add_system(draw_fire.system())
+        .add_system(animate_fire.system())
         .run();
 }
 
@@ -80,9 +87,7 @@ fn setup(
     mut fire_materials: ResMut<Assets<FireMaterial>>,
     mut render_graph: ResMut<RenderGraph>,
 ) {
-    commands.insert_resource(LoadingTexture(Some(
-        asset_server.load("fire.png"),
-    )));
+    commands.insert_resource(LoadingTexture(Some(asset_server.load("fire.png"))));
 
     let fire_material = fire_materials.add(FireMaterial {
         base_color: Color::rgba_u8(179, 111, 76, 180),
@@ -120,13 +125,21 @@ fn setup(
         .add_node_edge("fire_material", base::node::MAIN_PASS)
         .unwrap();
 
+    render_graph.add_system_node(
+        "time_component",
+        RenderResourcesNode::<TimeComponent>::new(true),
+    );
+    render_graph
+        .add_node_edge("time_component", base::node::MAIN_PASS)
+        .unwrap();
+
     commands.spawn(PerspectiveCameraBundle {
         transform: Transform::from_xyz(0.0, 0.0, -8.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
     });
 }
 
-fn spawn_fire(
+fn draw_fire(
     mut commands: Commands,
     fire_pipeline: Res<FirePipeline>,
     fire_material: Res<FireMaterialHandle>,
@@ -146,7 +159,6 @@ fn spawn_fire(
         None => return,
     };
 
-    // Create a new array texture asset from the loaded texture.
     let array_layers = 3;
     texture.reinterpret_stacked_2d_as_array(array_layers);
     let fire_texture = fire_textures.add(FireTexture { texture: handle });
@@ -163,6 +175,13 @@ fn spawn_fire(
             transform: Transform::from_xyz(0.0, 0.0, 0.0),
             ..Default::default()
         })
+        .with(TimeComponent { value: 0.0 })
         .with(fire_material.0.clone())
         .with(fire_texture);
+}
+
+fn animate_fire(time: Res<Time>, mut query: Query<&mut TimeComponent>) {
+    for mut time_component in query.iter_mut() {
+        time_component.value = time.seconds_since_startup() as f32;
+    }
 }
