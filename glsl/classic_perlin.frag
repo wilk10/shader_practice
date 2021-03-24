@@ -12,8 +12,7 @@ uniform vec2 u_resolution;
 uniform float u_time;
 
 vec4 mod289(vec4 x) {
-    float value = 289.0;
-    return x - floor(x * (1.0 / value)) * value;
+    return x - floor(x * (1.0 / 289.0)) * 289.0;
 }
 
 vec4 permute(vec4 x) {
@@ -60,14 +59,15 @@ void main()
     vec2 uv = gl_FragCoord.xy / u_resolution.xy;
     uv.x *= u_resolution.x / u_resolution.y;
 
-    float scale = 8.;
+    float scale = 20.;
     uv *= scale;
 
-    float noise = classicPerlinNoise(uv);
-    vec3 animated_noise = vec3(0.5 + 0.5*sin(u_time + 6.2831 * noise));
+    vec3 noise = vec3(classicPerlinNoise(uv));
 
-    // vec3 base_color = vec3(0.5, 0.5, 0.5);
-    // animated_noise += base_color;
+    // noise = sin(noise*u_time/2.);
 
-    gl_FragColor = vec4(animated_noise, 1.);
+    vec3 base_color = vec3(0.5, 0.5, 0.5);
+    noise += base_color;
+
+    gl_FragColor = vec4(noise, 1.0);
 }
