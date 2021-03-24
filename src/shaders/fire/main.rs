@@ -12,12 +12,6 @@ use bevy::{
 };
 
 #[derive(RenderResources, Default, TypeUuid)]
-#[uuid = "af8c8bb6-bab2-48e9-9251-6b757d28afda"]
-struct TimeComponent {
-    value: f32,
-}
-
-#[derive(RenderResources, Default, TypeUuid)]
 #[uuid = "93fb26fc-6c05-489b-9029-601edf703b6b"]
 struct FireTexture {
     pub texture: Handle<Texture>,
@@ -32,6 +26,7 @@ struct FireMaterial {
     pub power: f32,
     pub detail_level: f32,
     pub bottom_threshold: f32,
+    pub time: f32,
 }
 
 impl RenderResource for FireMaterial {
@@ -40,7 +35,7 @@ impl RenderResource for FireMaterial {
     }
 
     fn buffer_byte_len(&self) -> Option<usize> {
-        Some(28)
+        Some(32)
     }
 
     fn write_buffer_bytes(&self, buffer: &mut [u8]) {
@@ -53,7 +48,10 @@ impl RenderResource for FireMaterial {
         let (detail_level_buf, rest) = rest.split_at_mut(4);
         self.detail_level.write_bytes(detail_level_buf);
 
-        self.bottom_threshold.write_bytes(rest);
+        let (bottom_threshold_buf, rest) = rest.split_at_mut(4);
+        self.bottom_threshold.write_bytes(bottom_threshold_buf);
+
+        self.time.write_bytes(rest);
     }
 
     fn texture(&self) -> Option<&Handle<Texture>> {
@@ -64,8 +62,6 @@ impl RenderResource for FireMaterial {
 struct LoadingTexture(Option<Handle<Texture>>);
 
 struct FirePipeline(Handle<PipelineDescriptor>);
-
-struct FireMaterialHandle(Handle<FireMaterial>);
 
 pub fn main() {
     App::build()
@@ -84,18 +80,9 @@ fn setup(
     asset_server: Res<AssetServer>,
     mut pipelines: ResMut<Assets<PipelineDescriptor>>,
     mut shaders: ResMut<Assets<Shader>>,
-    mut fire_materials: ResMut<Assets<FireMaterial>>,
     mut render_graph: ResMut<RenderGraph>,
 ) {
     commands.insert_resource(LoadingTexture(Some(asset_server.load("fire.png"))));
-
-    let fire_material = fire_materials.add(FireMaterial {
-        base_color: Color::rgba_u8(179, 111, 76, 180),
-        power: 0.5,
-        detail_level: 10.0,
-        bottom_threshold: -0.5,
-    });
-    commands.insert_resource(FireMaterialHandle(fire_material));
 
     let pipeline_handle = pipelines.add(PipelineDescriptor::default_config(ShaderStages {
         vertex: shaders.add(Shader::from_glsl(
@@ -119,18 +106,10 @@ fn setup(
 
     render_graph.add_system_node(
         "fire_material",
-        AssetRenderResourcesNode::<FireMaterial>::new(true),
+        RenderResourcesNode::<FireMaterial>::new(true),
     );
     render_graph
         .add_node_edge("fire_material", base::node::MAIN_PASS)
-        .unwrap();
-
-    render_graph.add_system_node(
-        "time_component",
-        RenderResourcesNode::<TimeComponent>::new(true),
-    );
-    render_graph
-        .add_node_edge("time_component", base::node::MAIN_PASS)
         .unwrap();
 
     commands.spawn(PerspectiveCameraBundle {
@@ -142,7 +121,6 @@ fn setup(
 fn draw_fire(
     mut commands: Commands,
     fire_pipeline: Res<FirePipeline>,
-    fire_material: Res<FireMaterialHandle>,
     mut loading_texture: ResMut<LoadingTexture>,
     mut textures: ResMut<Assets<Texture>>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -163,6 +141,14 @@ fn draw_fire(
     texture.reinterpret_stacked_2d_as_array(array_layers);
     let fire_texture = fire_textures.add(FireTexture { texture: handle });
 
+    let fire_material = FireMaterial {
+        base_color: Color::rgba_u8(179, 111, 76, 180),
+        power: 0.15,
+        detail_level: 5.0,
+        bottom_threshold: -0.5,
+        time: 0.0,
+    };
+
     commands
         .spawn(MeshBundle {
             mesh: meshes.add(Mesh::from(shape::Quad {
@@ -175,13 +161,12 @@ fn draw_fire(
             transform: Transform::from_xyz(0.0, 0.0, 0.0),
             ..Default::default()
         })
-        .with(TimeComponent { value: 0.0 })
-        .with(fire_material.0.clone())
+        .with(fire_material)
         .with(fire_texture);
 }
 
-fn animate_fire(time: Res<Time>, mut query: Query<&mut TimeComponent>) {
-    for mut time_component in query.iter_mut() {
-        time_component.value = time.seconds_since_startup() as f32;
+fn animate_fire(time: Res<Time>, mut query: Query<&mut FireMaterial>) {
+    for mut fire_material in query.iter_mut() {
+        fire_material.time = time.seconds_since_startup() as f32;
     }
 }

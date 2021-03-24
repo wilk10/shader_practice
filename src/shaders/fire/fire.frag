@@ -1,87 +1,27 @@
 #version 450
 
-layout(location = 0) in vec2 uv;
-// layout(location = 1) in vec4 position;
+layout(location = 0) in vec2 _uv;
 layout(location = 0) out vec4 o_Target;
 
 layout(set = 2, binding = 0) uniform texture2DArray FireTexture_texture;
 layout(set = 2, binding = 1) uniform sampler FireTexture_texture_sampler;
 
 layout(set = 3, binding = 0) uniform FireMaterial {
-    vec4 base_color;
-    float power;
-    float detail_level;
-    float bottom_threshold;
-};
-
-layout(set = 4, binding = 0) uniform TimeComponent_value {
-    float u_time;
+    vec4 _base_color;
+    float _power;
+    float _detail_level;
+    float _bottom_threshold;
+    float _time;
 };
 
 precision mediump float;
 
 //////////////////////////
-// Classic Perlin Noise
-//
-// From Patricio Gonzalez Vivo: 
-// https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83
-//
-// and also:
-// https://stackoverflow.com/questions/21272465/glsl-shadows-with-perlin-noise 
-//
-
-vec4 mod289(vec4 x) {
-    return x - floor(x * (1.0 / 289.0)) * 289.0;
-}
-
-vec4 permute(vec4 x) {
-    return mod289(((x*34.0)+1.0)*x);
-}
-
-vec2 fade(vec2 t) {return t*t*t*(t*(t*6.0-15.0)+10.0);}
-
-float classicPerlinNoise(vec2 P, float perlin_scale_factor) {
-    // scale
-    P *= perlin_scale_factor;
-
-    vec4 Pi = floor(P.xyxy) + vec4(0.0, 0.0, 1.0, 1.0);
-    vec4 Pf = fract(P.xyxy) - vec4(0.0, 0.0, 1.0, 1.0);
-    Pi = mod(Pi, 289.0); // To avoid truncation effects in permutation
-    vec4 ix = Pi.xzxz;
-    vec4 iy = Pi.yyww;
-    vec4 fx = Pf.xzxz;
-    vec4 fy = Pf.yyww;
-    vec4 i = permute(permute(ix) + iy);
-    vec4 gx = 2.0 * fract(i * 0.0243902439) - 1.0; // 1/41 = 0.024...
-    vec4 gy = abs(gx) - 0.5;
-    vec4 tx = floor(gx + 0.5);
-    gx = gx - tx;
-    vec2 g00 = vec2(gx.x,gy.x);
-    vec2 g10 = vec2(gx.y,gy.y);
-    vec2 g01 = vec2(gx.z,gy.z);
-    vec2 g11 = vec2(gx.w,gy.w);
-    vec4 norm = 1.79284291400159 - 0.85373472095314 * 
-    vec4(dot(g00, g00), dot(g01, g01), dot(g10, g10), dot(g11, g11));
-    g00 *= norm.x;
-    g01 *= norm.y;
-    g10 *= norm.z;
-    g11 *= norm.w;
-    float n00 = dot(g00, vec2(fx.x, fy.x));
-    float n10 = dot(g10, vec2(fx.y, fy.y));
-    float n01 = dot(g01, vec2(fx.z, fy.z));
-    float n11 = dot(g11, vec2(fx.w, fy.w));
-    vec2 fade_xy = fade(Pf.xy);
-    vec2 n_x = mix(vec2(n00, n01), vec2(n10, n11), fade_xy.x);
-    float n_xy = mix(n_x.x, n_x.y, fade_xy.y);
-    return 2.3 * n_xy;
-}
-//////////////////////////
-
-//////////////////////////
 // Cellular Noise
-// from Patricio Gonzalez Vivo: https://thebookofshaders.com/12/
 //
-
+// From:
+// Patricio Gonzalez Vivo: https://thebookofshaders.com/12/
+//
 vec2 random2( vec2 p ) {
     return fract(
         sin(
@@ -111,9 +51,6 @@ float cellularNoise(vec2 uv, float scale_factor) {
             // Random position from current + neighbor place in the grid
             vec2 point = random2(i_st + neighbor);
 
-			// Animate the point
-            // point = 0.5 + 0.5 * sin(u_time + 6.2831 * point);
-
 			// Vector between the pixel and the point
             vec2 diff = neighbor + point - f_st;
 
@@ -128,23 +65,87 @@ float cellularNoise(vec2 uv, float scale_factor) {
 }
 //////////////////////////
 
-void main()
-{
-    // float cellular_scale_factor = 15.0;
-    // float perlin_scale_factor = 8.0;
+//////////////////////////
+// Simple Noise 2D
+//
+// From:
+// Patricio Gonzalez Vivo: https://thebookofshaders.com/12/
+//
+// And:
+// <https://www.shadertoy.com/view/4dS3Wd>
+// By Morgan McGuire @morgan3d, http://graphicscodex.com
+//
+float hash(vec2 p) { return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x)))); }
 
-    // float animated_cellular = cellularNoise(uv, cellular_scale_factor);
-    // float classic_perlin = classicPerlinNoise(uv, perlin_scale_factor);
-    // float animated_classic_perlin = 0.5 + 0.5 * sin(u_time + 6.2831 * classic_perlin);
+float simpleNoise(vec2 uv, float scale_factor) {
+    // Scale
+    uv *= scale_factor;
 
-    // float total_noise = animated_classic_perlin * animated_cellular;
-    // vec2 vertical_lerped_uv = mix(uv, vec2(total_noise), vec2(0., 1.));
+	vec2 i = floor(uv);
+	vec2 f = fract(uv);
 
-    vec2 vertical_lerped_uv = uv; 
+	// Four corners in 2D of a tile
+	float a = hash(i);
+	float b = hash(i + vec2(1.0, 0.0));
+	float c = hash(i + vec2(0.0, 1.0));
+	float d = hash(i + vec2(1.0, 1.0));
 
-    vec4 result = texture(sampler2DArray(FireTexture_texture, FireTexture_texture_sampler), vec3(vertical_lerped_uv, 0.));
-    result += texture(sampler2DArray(FireTexture_texture, FireTexture_texture_sampler), vec3(vertical_lerped_uv, 1.));
-    result += texture(sampler2DArray(FireTexture_texture, FireTexture_texture_sampler), vec3(vertical_lerped_uv, 2.));
-    result += base_color;
+	vec2 u = f * f * (3.0 - 2.0 * f);
+	return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+//////////////////////////
+
+void main() {
+    // scale factors (use _detail_level directly?)
+    float cellular_scale = _detail_level;
+    float simple_noise_scale = _detail_level;
+    float secondary_simple_noise_scale = _detail_level;
+
+    // iterate through layers and add noise to distort them
+    int N_LAYERS = 3;
+    vec4 result = _base_color;  
+    for (int layer = 0; layer < N_LAYERS; layer++) {
+
+        //// main cellular node
+        // main cellular secondary simple noise node
+        float secondary_simple_noise_animation = 0.5 * _time * layer;
+        vec2 offset_uv_seconday_simple_noise = _uv + vec2(0., secondary_simple_noise_animation);
+        float secondary_simple_noise = simpleNoise(offset_uv_seconday_simple_noise, secondary_simple_noise_scale);
+
+        // main cellular lerp
+        float lerp_animation = 0.25 * _time;
+        vec2 offset_uv_lerp = _uv + vec2(0., lerp_animation);
+        vec2 lerped_cellular_uv = mix(offset_uv_lerp, vec2(secondary_simple_noise), vec2(0.5));
+
+        // final cellular calculation
+        float cellular = cellularNoise(lerped_cellular_uv, cellular_scale);
+        ////
+
+        //// main simple noise node
+        float main_simple_noise_animation = 0.15 * _time * layer;
+        vec2 offset_uv_main_simple_noise = _uv + vec2(0., main_simple_noise_animation);
+        float main_simple_noise = simpleNoise(offset_uv_main_simple_noise, simple_noise_scale);
+        ////
+
+        //// combine noises
+        float total_noise = main_simple_noise * cellular;
+        vec2 vertical_lerped_uv = mix(_uv, vec2(total_noise), vec2(0., _power));
+
+        //// add to texture layers
+        result += texture(sampler2DArray(FireTexture_texture, FireTexture_texture_sampler), vec3(vertical_lerped_uv, layer));
+
+
+        ////// this part below is still not working
+
+        // //// adjust fire bottom
+        // float squared_y = pow(_uv.y, 2.);
+        // float adjusted_bottom = -2. * (squared_y + _bottom_threshold);
+        // float clamped_bottom = clamp(adjusted_bottom, 0., 1.);
+
+        // //// final result with clamped bottom
+        // result -= vec4(clamped_bottom);
+    }
+
+    // output
     o_Target = result;
 }
