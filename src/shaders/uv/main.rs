@@ -36,7 +36,7 @@ fn setup(
     }));
 
     commands
-        .spawn(MeshBundle {
+        .spawn_bundle(MeshBundle {
             mesh: meshes.add(Mesh::from(shape::Icosphere {
                 radius: 1.0,
                 subdivisions: 10,
@@ -47,22 +47,24 @@ fn setup(
             transform: Transform::from_xyz(-3.0, 0.0, 0.0),
             ..Default::default()
         })
-        .with(Rotator)
-        .spawn(MeshBundle {
-            mesh: meshes.add(Mesh::from(shape::Quad {
-                size: Vec2::new(3.0, 3.0),
-                flip: true,
-            })),
-            render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
-                pipeline_handle,
-            )]),
-            transform: Transform::from_xyz(3.0, 0.0, 0.0),
-            ..Default::default()
-        })
-        .spawn(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(0.0, 0.0, -8.0).looking_at(Vec3::ZERO, -Vec3::Y),
-            ..Default::default()
-        });
+        .insert(Rotator);
+
+    commands.spawn_bundle(MeshBundle {
+        mesh: meshes.add(Mesh::from(shape::Quad {
+            size: Vec2::new(3.0, 3.0),
+            flip: true,
+        })),
+        render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
+            pipeline_handle,
+        )]),
+        transform: Transform::from_xyz(3.0, 0.0, 0.0),
+        ..Default::default()
+    });
+
+    commands.spawn_bundle(PerspectiveCameraBundle {
+        transform: Transform::from_xyz(0.0, 0.0, -8.0).looking_at(Vec3::ZERO, -Vec3::Y),
+        ..Default::default()
+    });
 }
 
 fn rotate_sphere(time: Res<Time>, mut query: Query<&mut Transform, With<Rotator>>) {

@@ -112,7 +112,7 @@ fn setup(
         .add_node_edge("fire_material", base::node::MAIN_PASS)
         .unwrap();
 
-    commands.spawn(PerspectiveCameraBundle {
+    commands.spawn_bundle(PerspectiveCameraBundle {
         transform: Transform::from_xyz(0.0, 0.0, -8.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
     });
@@ -150,7 +150,7 @@ fn draw_fire(
     };
 
     commands
-        .spawn(MeshBundle {
+        .spawn_bundle(MeshBundle {
             mesh: meshes.add(Mesh::from(shape::Quad {
                 size: Vec2::new(5.0, 5.0),
                 flip: true,
@@ -161,8 +161,8 @@ fn draw_fire(
             transform: Transform::from_xyz(0.0, 0.0, 0.0),
             ..Default::default()
         })
-        .with(fire_material)
-        .with(fire_texture);
+        .insert(fire_material)
+        .insert(fire_texture);
 }
 
 fn animate_fire(time: Res<Time>, mut query: Query<&mut FireMaterial>) {

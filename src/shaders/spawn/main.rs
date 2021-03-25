@@ -165,31 +165,34 @@ fn setup(
     };
 
     commands
-        .spawn(MeshBundle {
+        .spawn_bundle(MeshBundle {
             mesh: meshes.add(Mesh::from(capsule)),
             render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
-                pipeline_handle.clone(),
+                pipeline_handle,
             )]),
             transform: Transform::from_xyz(0.0, 0.0, 0.0),
             ..Default::default()
         })
-        .with(TimeComponent { value: 0.0 })
-        .with(spawn_material)
-        .with(Rotator)
-        .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 0.5 })),
-            material: standard_materials.add(Color::rgb_u8(159, 59, 87).into()),
-            transform: Transform::from_xyz(0.0, 0.0, -1.0),
-            ..Default::default()
-        })
-        .spawn(LightBundle {
-            transform: Transform::from_xyz(4.0, 8.0, 4.0),
-            ..Default::default()
-        })
-        .spawn(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(0.0, -2.0, -8.0).looking_at(Vec3::ZERO, -Vec3::Y),
-            ..Default::default()
-        });
+        .insert(TimeComponent { value: 0.0 })
+        .insert(spawn_material)
+        .insert(Rotator);
+
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::Cube { size: 0.5 })),
+        material: standard_materials.add(Color::rgb_u8(159, 59, 87).into()),
+        transform: Transform::from_xyz(0.0, 0.0, -1.0),
+        ..Default::default()
+    });
+
+    commands.spawn_bundle(LightBundle {
+        transform: Transform::from_xyz(4.0, 8.0, 4.0),
+        ..Default::default()
+    });
+
+    commands.spawn_bundle(PerspectiveCameraBundle {
+        transform: Transform::from_xyz(0.0, -2.0, -8.0).looking_at(Vec3::ZERO, -Vec3::Y),
+        ..Default::default()
+    });
 }
 
 fn rotate_capsule(time: Res<Time>, mut query: Query<&mut Transform, With<Rotator>>) {
