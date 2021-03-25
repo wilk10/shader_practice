@@ -137,15 +137,14 @@ fn draw_fire(
         None => return,
     };
 
-    let array_layers = 3;
-    texture.reinterpret_stacked_2d_as_array(array_layers);
+    texture.reinterpret_stacked_2d_as_array(3);
     let fire_texture = fire_textures.add(FireTexture { texture: handle });
 
     let fire_material = FireMaterial {
         base_color: Color::rgb(0.9245, 0.3224, 0.0654),
         flame_height: 0.2,
         distorsion_level: 7.0,
-        bottom_threshold: -0.5,
+        bottom_threshold: -0.35,
         time: 0.0,
     };
 

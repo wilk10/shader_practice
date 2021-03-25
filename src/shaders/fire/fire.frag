@@ -1,3 +1,9 @@
+//////////////////////////
+// This is a port from the following video by Jettelly:
+// https://www.youtube.com/watch?v=Y_6m6JRMClk
+//
+// made for Unity Shader Graph
+//
 #version 450
 
 layout(location = 0) in vec2 _uv;
@@ -138,7 +144,9 @@ void main() {
     vec2 flipped_uv = vec2(_uv.x, 1. - _uv.y);
     
     // then adjust
-    float adjusted_bottom = 2. * (1. - sqrt(flipped_uv).y + _bottom_threshold);
+    float adjusted_bottom = 0.5 * (1. - pow(flipped_uv.y, 2.) + _bottom_threshold); 
+    // (note: this departs from Jettelly implementation, where it would be):
+    // float adjusted_bottom = 2. * (1. - sqrt(flipped_uv.y) + _bottom_threshold);
     float clamped_bottom = clamp(adjusted_bottom, 0., 1.);
     image -= vec4(clamped_bottom);
     ////
