@@ -8,8 +8,8 @@ layout(set = 2, binding = 1) uniform sampler FireTexture_texture_sampler;
 
 layout(set = 3, binding = 0) uniform FireMaterial {
     vec4 _base_color;
-    float _power;
-    float _detail_level;
+    float _flame_height;
+    float _distorsion_level;
     float _bottom_threshold;
     float _time;
 };
@@ -97,39 +97,33 @@ float simpleNoise(vec2 uv, float scale_factor) {
 
 vec2 animateVertically(vec2 uv, float time, float factor) {
     vec2 vertical_animation = vec2(0., factor * time);
-    vec2 displace_vertically = uv + vertical_animation;
-    // vec2 clamp_displacement = clamp(displace_vertically, 0., 1.);
-    return displace_vertically;
+    return uv + vertical_animation;
 }
 
 void main() {
-    //// scale factors (use _detail_level directly?)
-    float cellular_scale = _detail_level;
-    float simple_noise_scale = _detail_level;
-    float secondary_simple_noise_scale = _detail_level;
-
     //// main cellular node
     // main cellular secondary simple noise node
     vec2 secondary_simple_noise_uv = animateVertically(_uv, _time, 0.5);
-    float secondary_simple_noise = simpleNoise(secondary_simple_noise_uv, secondary_simple_noise_scale);
+    float secondary_simple_noise = simpleNoise(secondary_simple_noise_uv, _distorsion_level);
 
     // main cellular lerp
     vec2 cellular_uv = animateVertically(_uv, _time, 0.25);
     vec2 lerped_cellular_uv = mix(cellular_uv, vec2(secondary_simple_noise), vec2(0.5));
 
     // final cellular calculation
-    float cellular = cellularNoise(lerped_cellular_uv, cellular_scale);
+    float cellular = cellularNoise(lerped_cellular_uv, _distorsion_level);
     ////
 
     //// main simple noise node
     vec2 main_simple_noise_uv = animateVertically(_uv, _time, 0.3);
-    float main_simple_noise = simpleNoise(main_simple_noise_uv, simple_noise_scale);
+    float main_simple_noise = simpleNoise(main_simple_noise_uv, _distorsion_level);
 
     //// combine noises
     float total_noise = main_simple_noise * cellular;
-    vec2 vertical_lerped_uv = mix(_uv, vec2(total_noise), vec2(0., _power));
+    vec2 vertical_lerped_uv = mix(_uv, vec2(total_noise), vec2(0., _flame_height));
+    vertical_lerped_uv += vec2(0., _flame_height); // get the layers to overlap correctly 
 
-    //// iterate through layers and add noise to distort them
+    // iterate through layers and add noise to distort them
     int N_LAYERS = 3; 
     vec4 image = vec4(0.);
     for (int layer = 0; layer < N_LAYERS; layer++) {
@@ -149,17 +143,9 @@ void main() {
     image -= vec4(clamped_bottom);
     ////
 
-    vec4 result = clamp(image, vec4(0.), vec4(1.));
-
     //// add color and output
+    vec4 result = clamp(image, vec4(0.), vec4(1.));
     result *= _base_color;
     result *= vec4(vec3(10.), 1.);
     o_Target = result;
 }
-
-
-/* 
-things that are still wrong:
-2- the "space" is a bit weird, i'm happy with the vertical extent, but the bottom gets distorted waay below 
-    the bottom of the mesh
-*/

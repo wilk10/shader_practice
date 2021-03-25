@@ -23,8 +23,8 @@ struct FireTexture {
 #[repr(C)]
 struct FireMaterial {
     pub base_color: Color,
-    pub power: f32,
-    pub detail_level: f32,
+    pub flame_height: f32,
+    pub distorsion_level: f32,
     pub bottom_threshold: f32,
     pub time: f32,
 }
@@ -42,11 +42,11 @@ impl RenderResource for FireMaterial {
         let (base_color_buf, rest) = buffer.split_at_mut(16);
         self.base_color.write_bytes(base_color_buf);
 
-        let (power_buf, rest) = rest.split_at_mut(4);
-        self.power.write_bytes(power_buf);
+        let (flame_height_buf, rest) = rest.split_at_mut(4);
+        self.flame_height.write_bytes(flame_height_buf);
 
-        let (detail_level_buf, rest) = rest.split_at_mut(4);
-        self.detail_level.write_bytes(detail_level_buf);
+        let (distorsion_level_buf, rest) = rest.split_at_mut(4);
+        self.distorsion_level.write_bytes(distorsion_level_buf);
 
         let (bottom_threshold_buf, rest) = rest.split_at_mut(4);
         self.bottom_threshold.write_bytes(bottom_threshold_buf);
@@ -82,7 +82,7 @@ fn setup(
     mut shaders: ResMut<Assets<Shader>>,
     mut render_graph: ResMut<RenderGraph>,
 ) {
-    commands.insert_resource(LoadingTexture(Some(asset_server.load("fire7.png"))));
+    commands.insert_resource(LoadingTexture(Some(asset_server.load("fire.png"))));
 
     let pipeline_handle = pipelines.add(PipelineDescriptor::default_config(ShaderStages {
         vertex: shaders.add(Shader::from_glsl(
@@ -142,10 +142,9 @@ fn draw_fire(
     let fire_texture = fire_textures.add(FireTexture { texture: handle });
 
     let fire_material = FireMaterial {
-        // base_color: Color::rgba_u8(179, 111, 76, 180),
         base_color: Color::rgb(0.9245, 0.3224, 0.0654),
-        power: 0.3, // vertical extent. higher levels will increase the flame height
-        detail_level: 6.0, // departure from texture. lower levels stay closer to the input texture
+        flame_height: 0.2,
+        distorsion_level: 7.0,
         bottom_threshold: -0.5,
         time: 0.0,
     };
