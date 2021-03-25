@@ -82,7 +82,7 @@ fn setup(
     mut shaders: ResMut<Assets<Shader>>,
     mut render_graph: ResMut<RenderGraph>,
 ) {
-    commands.insert_resource(LoadingTexture(Some(asset_server.load("fire.png"))));
+    commands.insert_resource(LoadingTexture(Some(asset_server.load("fire7.png"))));
 
     let pipeline_handle = pipelines.add(PipelineDescriptor::default_config(ShaderStages {
         vertex: shaders.add(Shader::from_glsl(
@@ -142,9 +142,10 @@ fn draw_fire(
     let fire_texture = fire_textures.add(FireTexture { texture: handle });
 
     let fire_material = FireMaterial {
-        base_color: Color::rgba_u8(179, 111, 76, 180),
-        power: 0.15,
-        detail_level: 5.0,
+        // base_color: Color::rgba_u8(179, 111, 76, 180),
+        base_color: Color::rgb(0.9245, 0.3224, 0.0654),
+        power: 0.3, // vertical extent. higher levels will increase the flame height
+        detail_level: 6.0, // departure from texture. lower levels stay closer to the input texture
         bottom_threshold: -0.5,
         time: 0.0,
     };

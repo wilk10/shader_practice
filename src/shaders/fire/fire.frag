@@ -95,57 +95,71 @@ float simpleNoise(vec2 uv, float scale_factor) {
 }
 //////////////////////////
 
+vec2 animateVertically(vec2 uv, float time, float factor) {
+    vec2 vertical_animation = vec2(0., factor * time);
+    vec2 displace_vertically = uv + vertical_animation;
+    // vec2 clamp_displacement = clamp(displace_vertically, 0., 1.);
+    return displace_vertically;
+}
+
 void main() {
-    // scale factors (use _detail_level directly?)
+    //// scale factors (use _detail_level directly?)
     float cellular_scale = _detail_level;
     float simple_noise_scale = _detail_level;
     float secondary_simple_noise_scale = _detail_level;
 
-    // iterate through layers and add noise to distort them
-    int N_LAYERS = 3;
-    vec4 result = _base_color;  
+    //// main cellular node
+    // main cellular secondary simple noise node
+    vec2 secondary_simple_noise_uv = animateVertically(_uv, _time, 0.5);
+    float secondary_simple_noise = simpleNoise(secondary_simple_noise_uv, secondary_simple_noise_scale);
+
+    // main cellular lerp
+    vec2 cellular_uv = animateVertically(_uv, _time, 0.25);
+    vec2 lerped_cellular_uv = mix(cellular_uv, vec2(secondary_simple_noise), vec2(0.5));
+
+    // final cellular calculation
+    float cellular = cellularNoise(lerped_cellular_uv, cellular_scale);
+    ////
+
+    //// main simple noise node
+    vec2 main_simple_noise_uv = animateVertically(_uv, _time, 0.3);
+    float main_simple_noise = simpleNoise(main_simple_noise_uv, simple_noise_scale);
+
+    //// combine noises
+    float total_noise = main_simple_noise * cellular;
+    vec2 vertical_lerped_uv = mix(_uv, vec2(total_noise), vec2(0., _power));
+
+    //// iterate through layers and add noise to distort them
+    int N_LAYERS = 3; 
+    vec4 image = vec4(0.);
     for (int layer = 0; layer < N_LAYERS; layer++) {
 
-        //// main cellular node
-        // main cellular secondary simple noise node
-        float secondary_simple_noise_animation = 0.5 * _time * layer;
-        vec2 offset_uv_seconday_simple_noise = _uv + vec2(0., secondary_simple_noise_animation);
-        float secondary_simple_noise = simpleNoise(offset_uv_seconday_simple_noise, secondary_simple_noise_scale);
-
-        // main cellular lerp
-        float lerp_animation = 0.25 * _time;
-        vec2 offset_uv_lerp = _uv + vec2(0., lerp_animation);
-        vec2 lerped_cellular_uv = mix(offset_uv_lerp, vec2(secondary_simple_noise), vec2(0.5));
-
-        // final cellular calculation
-        float cellular = cellularNoise(lerped_cellular_uv, cellular_scale);
-        ////
-
-        //// main simple noise node
-        float main_simple_noise_animation = 0.15 * _time * layer;
-        vec2 offset_uv_main_simple_noise = _uv + vec2(0., main_simple_noise_animation);
-        float main_simple_noise = simpleNoise(offset_uv_main_simple_noise, simple_noise_scale);
-        ////
-
-        //// combine noises
-        float total_noise = main_simple_noise * cellular;
-        vec2 vertical_lerped_uv = mix(_uv, vec2(total_noise), vec2(0., _power));
-
-        //// add to texture layers
-        result += texture(sampler2DArray(FireTexture_texture, FireTexture_texture_sampler), vec3(vertical_lerped_uv, layer));
-
-
-        ////// this part below is still not working
-
-        // //// adjust fire bottom
-        // float squared_y = pow(_uv.y, 2.);
-        // float adjusted_bottom = -2. * (squared_y + _bottom_threshold);
-        // float clamped_bottom = clamp(adjusted_bottom, 0., 1.);
-
-        // //// final result with clamped bottom
-        // result -= vec4(clamped_bottom);
+        // add distortion to each texture layer
+        vec3 distortion = vec3(vertical_lerped_uv, layer);
+        image += texture(sampler2DArray(FireTexture_texture, FireTexture_texture_sampler), distortion);
     }
 
-    // output
+    //// adjust fire bottom
+    // first flip them (because input uv are flipped vertically. possibly a bug, but not sure where)
+    vec2 flipped_uv = vec2(_uv.x, 1. - _uv.y);
+    
+    // then adjust
+    float adjusted_bottom = 2. * (1. - sqrt(flipped_uv).y + _bottom_threshold);
+    float clamped_bottom = clamp(adjusted_bottom, 0., 1.);
+    image -= vec4(clamped_bottom);
+    ////
+
+    vec4 result = clamp(image, vec4(0.), vec4(1.));
+
+    //// add color and output
+    result *= _base_color;
+    result *= vec4(vec3(10.), 1.);
     o_Target = result;
 }
+
+
+/* 
+things that are still wrong:
+2- the "space" is a bit weird, i'm happy with the vertical extent, but the bottom gets distorted waay below 
+    the bottom of the mesh
+*/
