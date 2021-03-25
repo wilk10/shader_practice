@@ -65,7 +65,6 @@ struct FirePipeline(Handle<PipelineDescriptor>);
 
 pub fn main() {
     App::build()
-        .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
         .add_asset::<FireMaterial>()
         .add_asset::<FireTexture>()
