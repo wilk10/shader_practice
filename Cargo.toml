@@ -28,5 +28,9 @@ name = "spawn"
 path = "src/shaders/spawn/main.rs"
 
 [[example]]
+name = "time"
+path = "src/shaders/time/main.rs"
+
+[[example]]
 name = "uv"
 path = "src/shaders/uv/main.rs"
