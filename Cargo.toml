@@ -5,7 +5,7 @@ authors = ["Anselmo Sampietro <ans.samp@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-bevy = { git = "https://github.com/bevyengine/bevy", rev = "1d7196da4fff00bbc15fe75a04849de915f587d5" }
+bevy = "0.5.0"
 
 [[example]]
 name = "blend"
